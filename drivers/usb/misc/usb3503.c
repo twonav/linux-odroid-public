@@ -28,6 +28,7 @@
 #include <linux/platform_device.h>
 #include <linux/platform_data/usb3503.h>
 #include <linux/regmap.h>
+#include <linux/regulator/consumer.h>
 
 #define USB3503_VIDL		0x00
 #define USB3503_VIDM		0x01
@@ -81,6 +82,7 @@ struct usb3503 {
 	struct regmap		*regmap;
 	struct device		*dev;
 	struct clk		*clk;
+	struct regulator	*reg_ext;
 	int	gpio_intn;
 	int	gpio_reset;
 	int	gpio_connect;
@@ -88,6 +90,23 @@ struct usb3503 {
 	u8	port_off_mask;
 	bool	secondary_ref_clk;
 };
+
+static int usb3503_ext_regulator(struct usb3503 *hub, int state)
+{
+	int ret;
+
+	if (!hub->reg_ext)
+		return 0;
+
+	if (state) {
+		ret = regulator_enable(hub->reg_ext);
+	} else {
+		regulator_disable(hub->reg_ext);
+		ret = 0;
+	}
+
+	return ret;
+}
 
 static int usb3503_reset(struct usb3503 *hub, int state)
 {
@@ -217,6 +236,7 @@ static int usb3503_probe(struct usb3503 *hub)
 		hub->mode		= pdata->initial_mode;
 	} else if (np) {
 		struct clk *clk;
+		struct regulator *reg;
 		u32 rate = 0;
 		hub->port_off_mask = 0;
 
@@ -295,6 +315,11 @@ static int usb3503_probe(struct usb3503 *hub)
 
 		of_property_read_u32(np, "usb3503-gpio-waittime", &waittime);
 		hub->gpio_waittime = waittime;
+
+		reg = devm_regulator_get_optional(dev, "ext");
+		if (!IS_ERR_OR_NULL(reg)) {
+			hub->reg_ext = reg;
+		}
 	}
 
 	if (hub->port_off_mask && !hub->regmap)
@@ -333,6 +358,12 @@ static int usb3503_probe(struct usb3503 *hub)
 				hub->gpio_reset, err);
 			return err;
 		}
+	}
+
+	err = usb3503_ext_regulator(hub, 1);
+	if (err) {
+		dev_err(dev, "unable to enable ext regulator (%d)\n",
+			err);
 	}
 
 	usb3503_switch_mode(hub, hub->mode);
@@ -376,6 +407,18 @@ static int usb3503_i2c_remove(struct i2c_client *i2c)
 	return 0;
 }
 
+static void usb3503_i2c_shutdown(struct i2c_client *i2c)
+{
+	struct usb3503 *hub;
+	int err;
+
+	hub = i2c_get_clientdata(i2c);
+	if (hub) {
+		err = usb3503_ext_regulator(hub, 0);
+		BUG_ON(err);
+	}
+}
+
 static int usb3503_platform_probe(struct platform_device *pdev)
 {
 	struct usb3503 *hub;
@@ -398,6 +441,18 @@ static int usb3503_platform_remove(struct platform_device *pdev)
 		clk_disable_unprepare(hub->clk);
 
 	return 0;
+}
+
+static void usb3503_platform_shutdown(struct platform_device *pdev)
+{
+	struct usb3503 *hub;
+	int err;
+
+	hub = platform_get_drvdata(pdev);
+	if (hub) {
+		err = usb3503_ext_regulator(hub, 0);
+		BUG_ON(err);
+	}
 }
 
 #ifdef CONFIG_PM_SLEEP
@@ -454,6 +509,7 @@ static struct i2c_driver usb3503_i2c_driver = {
 	},
 	.probe		= usb3503_i2c_probe,
 	.remove		= usb3503_i2c_remove,
+	.shutdown	= usb3503_i2c_shutdown,
 	.id_table	= usb3503_id,
 };
 
@@ -464,6 +520,7 @@ static struct platform_driver usb3503_platform_driver = {
 	},
 	.probe		= usb3503_platform_probe,
 	.remove		= usb3503_platform_remove,
+	.shutdown	= usb3503_platform_shutdown,
 };
 
 static int __init usb3503_init(void)
