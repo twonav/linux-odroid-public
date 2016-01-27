@@ -2962,8 +2962,8 @@ extern int drm_mode_plane_set_obj_prop(struct drm_plane *plane,
 				       struct drm_property *property,
 				       uint64_t value);
 
-extern struct drm_property *drm_mode_create_rotation_property(struct drm_device *dev,
-							      unsigned int supported_rotations);
+extern int drm_mode_create_rotation_property(struct drm_device *dev,
+					     unsigned int supported_rotations);
 extern unsigned int drm_rotation_simplify(unsigned int rotation,
 					  unsigned int supported_rotations);
 extern void drm_crtc_enable_color_mgmt(struct drm_crtc *crtc,
