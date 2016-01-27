@@ -1438,6 +1438,11 @@ struct drm_plane_state {
 	unsigned int zpos;
 	unsigned int normalized_zpos;
 
+	/* Plane blending */
+	unsigned int blending;
+	unsigned int alpha;
+	bool alpha_premult;
+
 	struct drm_atomic_state *state;
 };
 
@@ -2487,6 +2492,21 @@ struct drm_mode_config {
 	 */
 	struct drm_property *rotation_property;
 	/**
+	 * @blending_property: Optional property for planes or CRTCs to specify
+	 * blending.
+	 */
+	struct drm_property *blending_property;
+	/**
+	 * @alpha_property: Optional property for planes or CRTCs to specify
+	 * the alpha value (transparency) for blending.
+	 */
+	struct drm_property *alpha_property;
+	/**
+	 * @alpha_premult_property: Optional property for planes or CRTCs to specify
+	 * premultiplication mode for blending.
+	 */
+	struct drm_property *alpha_premult_property;
+	/**
 	 * @prop_src_x: Default atomic plane property for the plane source
 	 * position in the connected &drm_framebuffer.
 	 */
@@ -2977,6 +2997,13 @@ int drm_plane_create_zpos_property(struct drm_plane *plane,
 
 int drm_plane_create_zpos_immutable_property(struct drm_plane *plane,
 					     unsigned int zpos);
+
+extern int drm_mode_create_blending_property(struct drm_device *dev,
+				      unsigned int *supported_blendings,
+				      unsigned int supported_blendings_count);
+extern int drm_mode_create_alpha_property(struct drm_device *dev,
+					  unsigned int max);
+extern int drm_mode_create_alpha_premult_property(struct drm_device *dev);
 
 /* Helpers */
 struct drm_mode_object *drm_mode_object_find(struct drm_device *dev,

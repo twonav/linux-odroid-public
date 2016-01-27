@@ -18,6 +18,9 @@ DRM,Generic,“rotation”,BITMASK,"{ 0, ""rotate-0"" }, { 1, ""rotate-90"" }, {
 ,,“FB_ID”,OBJECT,DRM_MODE_OBJECT_FB,Plane,Scanout framebuffer (atomic)
 ,,“CRTC_ID”,OBJECT,DRM_MODE_OBJECT_CRTC,Plane,CRTC that plane is attached to (atomic)
 ,,“zpos”,RANGE,"Min=0, Max=UINT_MAX","Plane,Z-order of the plane.Planes with higher Z-order values are displayed on top, planes with identical Z-order values are display in an undefined order"
+,,“blending”,ENUM,"{ “disabled”, “pixel-alpha”, “const-alpha, “pixel-const-alpha” }",Plane,Selects algorithm used in plane blending operation. For more information, see DRM_BLEND_* symbolic constant documentation.
+,,“alpha”,RANGE,"Min=0, Max=driver dependent",Plane,Plane's alpha value (transparency) for blending operation. Used in some blending modes.
+,,“alpha_premult”,BOOL,"Min=0, Max=1",Plane,Indicates the range of the RGB data of the framebuffer attached to the given plane. When enabled, RGB values fits the range from 0 to pixel's alpha value. When disabled, RGB values are from 0 to 255 range and during blending operations they will be multiplied by the pixel's alpha value first before computing result of blending equations. Value of this property is used in some blending modes and only when user attaches framebuffer with pixel format, which contains non-binary alpha channel.
 ,DVI-I,“subconnector”,ENUM,"{ “Unknown”, “DVI-D”, “DVI-A” }",Connector,TBD
 ,,“select subconnector”,ENUM,"{ “Automatic”, “DVI-D”, “DVI-A” }",Connector,TBD
 ,TV,“subconnector”,ENUM,"{ ""Unknown"", ""Composite"", ""SVIDEO"", ""Component"", ""SCART"" }",Connector,TBD
