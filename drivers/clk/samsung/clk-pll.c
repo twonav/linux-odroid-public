@@ -1174,7 +1174,7 @@ static void __init _samsung_clk_register_pll(struct samsung_clk_provider *ctx,
 	}
 
 	init.name = pll_clk->name;
-	init.flags = pll_clk->flags;
+	init.flags = pll_clk->flags | (ctx->dev ? CLK_RUNTIME_PM : 0);
 	init.parent_names = &pll_clk->parent_name;
 	init.num_parents = 1;
 
@@ -1285,7 +1285,7 @@ static void __init _samsung_clk_register_pll(struct samsung_clk_provider *ctx,
 	pll->lock_reg = base + pll_clk->lock_offset;
 	pll->con_reg = base + pll_clk->con_offset;
 
-	clk = clk_register(NULL, &pll->hw);
+	clk = clk_register(ctx->dev, &pll->hw);
 	if (IS_ERR(clk)) {
 		pr_err("%s: failed to register pll clock %s : %ld\n",
 			__func__, pll_clk->name, PTR_ERR(clk));

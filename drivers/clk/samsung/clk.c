@@ -143,8 +143,11 @@ void __init samsung_clk_register_fixed_rate(struct samsung_clk_provider *ctx,
 	unsigned int idx, ret;
 
 	for (idx = 0; idx < nr_clk; idx++, list++) {
-		clk = clk_register_fixed_rate(NULL, list->name,
-			list->parent_name, list->flags, list->fixed_rate);
+		unsigned int pm_flags = ctx->dev ? CLK_RUNTIME_PM : 0;
+
+		clk = clk_register_fixed_rate(ctx->dev, list->name,
+			list->parent_name, list->flags | pm_flags,
+			list->fixed_rate);
 		if (IS_ERR(clk)) {
 			pr_err("%s: failed to register clock %s\n", __func__,
 				list->name);
@@ -172,8 +175,11 @@ void __init samsung_clk_register_fixed_factor(struct samsung_clk_provider *ctx,
 	unsigned int idx;
 
 	for (idx = 0; idx < nr_clk; idx++, list++) {
-		clk = clk_register_fixed_factor(NULL, list->name,
-			list->parent_name, list->flags, list->mult, list->div);
+		unsigned int pm_flags = ctx->dev ? CLK_RUNTIME_PM : 0;
+
+		clk = clk_register_fixed_factor(ctx->dev, list->name,
+			list->parent_name, list->flags | pm_flags, list->mult,
+			list->div);
 		if (IS_ERR(clk)) {
 			pr_err("%s: failed to register clock %s\n", __func__,
 				list->name);
@@ -193,8 +199,10 @@ void __init samsung_clk_register_mux(struct samsung_clk_provider *ctx,
 	unsigned int idx, ret;
 
 	for (idx = 0; idx < nr_clk; idx++, list++) {
-		clk = clk_register_mux(NULL, list->name, list->parent_names,
-			list->num_parents, list->flags,
+		unsigned int pm_flags = ctx->dev ? CLK_RUNTIME_PM : 0;
+
+		clk = clk_register_mux(ctx->dev, list->name, list->parent_names,
+			list->num_parents, list->flags | pm_flags,
 			ctx->reg_base + list->offset,
 			list->shift, list->width, list->mux_flags, &ctx->lock);
 		if (IS_ERR(clk)) {
@@ -225,15 +233,17 @@ void __init samsung_clk_register_div(struct samsung_clk_provider *ctx,
 	unsigned int idx, ret;
 
 	for (idx = 0; idx < nr_clk; idx++, list++) {
+		unsigned int pm_flags = ctx->dev ? CLK_RUNTIME_PM : 0;
+
 		if (list->table)
-			clk = clk_register_divider_table(NULL, list->name,
-				list->parent_name, list->flags,
+			clk = clk_register_divider_table(ctx->dev, list->name,
+				list->parent_name, list->flags | pm_flags,
 				ctx->reg_base + list->offset,
 				list->shift, list->width, list->div_flags,
 				list->table, &ctx->lock);
 		else
-			clk = clk_register_divider(NULL, list->name,
-				list->parent_name, list->flags,
+			clk = clk_register_divider(ctx->dev, list->name,
+				list->parent_name, list->flags | pm_flags,
 				ctx->reg_base + list->offset, list->shift,
 				list->width, list->div_flags, &ctx->lock);
 		if (IS_ERR(clk)) {
@@ -264,8 +274,10 @@ void __init samsung_clk_register_gate(struct samsung_clk_provider *ctx,
 	unsigned int idx, ret;
 
 	for (idx = 0; idx < nr_clk; idx++, list++) {
-		clk = clk_register_gate(NULL, list->name, list->parent_name,
-				list->flags, ctx->reg_base + list->offset,
+		unsigned int pm_flags = ctx->dev ? CLK_RUNTIME_PM : 0;
+
+		clk = clk_register_gate(ctx->dev, list->name, list->parent_name,
+				list->flags | pm_flags, ctx->reg_base + list->offset,
 				list->bit_idx, list->gate_flags, &ctx->lock);
 		if (IS_ERR(clk)) {
 			pr_err("%s: failed to register clock %s\n", __func__,

@@ -26,6 +26,7 @@ struct clk;
  */
 struct samsung_clk_provider {
 	void __iomem *reg_base;
+	struct device *dev;
 	struct clk_onecell_data clk_data;
 	spinlock_t lock;
 };
