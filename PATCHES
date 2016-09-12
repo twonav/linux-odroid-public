@@ -2,3 +2,4 @@
 [PATCH] gpu/mali: integration of r5p0 for Exynos4412/Mali-400MP4
 [PATCH 0/6] Exynos: runtime/sleep pm fixes for gfx and media drivers
 [PATCH 0/3] Exynos4-IS: improve clock management
+[PATCH v2 0/5] Add runtime PM support for clocks (on Exynos SoC example)
