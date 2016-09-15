@@ -4,3 +4,4 @@
 [PATCH 0/3] Exynos4-IS: improve clock management
 [PATCH v2 0/5] Add runtime PM support for clocks (on Exynos SoC example)
 [PATCH v4 0/5] Functional dependencies between devices
+[PATCH v4 0/2] Exynos IOMMU: proper runtime PM support (use device dependencies)
