@@ -18,6 +18,7 @@
 #include <linux/workqueue.h>
 #include <linux/dma-mapping.h>
 #include <linux/of.h>
+#include <linux/devfreq.h>
 
 #include <drm/drmP.h>
 #include <drm/exynos_drm.h>
@@ -25,6 +26,9 @@
 #include "exynos_drm_g2d.h"
 #include "exynos_drm_gem.h"
 #include "exynos_drm_iommu.h"
+
+extern int update_devfreq(struct devfreq *devfreq);
+#define G2D_DEVFREQ_DMC_MIN 400000000
 
 #define G2D_HW_MAJOR_VER		4
 #define G2D_HW_MINOR_VER		1
@@ -396,6 +400,7 @@ struct g2d_data {
 	struct clk			*gate_clk;
 	void __iomem			*regs;
 	int				irq;
+	struct devfreq			*devfreq;
 	struct workqueue_struct		*g2d_workq;
 	struct work_struct		runqueue_work;
 	struct exynos_drm_subdrv	subdrv;
@@ -2397,6 +2402,17 @@ static int g2d_open(struct drm_device *drm_dev, struct device *dev,
 {
 	struct drm_exynos_file_private *file_priv = file->driver_priv;
 	struct exynos_drm_g2d_private *g2d_priv;
+	struct g2d_data *g2d;
+
+	g2d = dev_get_drvdata(dev);
+	if (!g2d)
+		return -EFAULT;
+
+	if (!g2d->devfreq) {
+		g2d->devfreq = devfreq_get_devfreq_by_phandle(dev, 0);
+		if (IS_ERR(g2d->devfreq))
+			g2d->devfreq = NULL;
+	}
 
 	g2d_priv = kzalloc(sizeof(*g2d_priv), GFP_KERNEL);
 	if (!g2d_priv)
@@ -2616,6 +2632,13 @@ static int g2d_runtime_suspend(struct device *dev)
 
 	clk_disable_unprepare(g2d->gate_clk);
 
+	if (g2d->devfreq) {
+		mutex_lock(&g2d->devfreq->lock);
+		g2d->devfreq->min_freq = 0;
+		update_devfreq(g2d->devfreq);
+		mutex_unlock(&g2d->devfreq->lock);
+	}
+
 	return 0;
 }
 
@@ -2623,6 +2646,13 @@ static int g2d_runtime_resume(struct device *dev)
 {
 	struct g2d_data *g2d = dev_get_drvdata(dev);
 	int ret;
+
+	if (g2d->devfreq) {
+		mutex_lock(&g2d->devfreq->lock);
+		g2d->devfreq->min_freq = G2D_DEVFREQ_DMC_MIN;
+		update_devfreq(g2d->devfreq);
+		mutex_unlock(&g2d->devfreq->lock);
+	}
 
 	ret = clk_prepare_enable(g2d->gate_clk);
 	if (unlikely(ret < 0))
