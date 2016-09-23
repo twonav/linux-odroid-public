@@ -8,3 +8,4 @@
 [PATCH v5 0/5] drm/exynos: introduce generic zpos and blending properties
 [PATCH 00/25] Exynos DRM: new life of IPP (Image Post Processing) subsystem
 [PATCH] drm/exynos: g2d: various improvements for the G2D driver
+[PATCH 0/2] Use drm-core helpers to wait for updates
