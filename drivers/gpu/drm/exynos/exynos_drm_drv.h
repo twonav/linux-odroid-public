@@ -96,7 +96,6 @@ struct exynos_drm_plane {
 	struct drm_plane base;
 	const struct exynos_drm_plane_config *config;
 	unsigned int index;
-	struct drm_framebuffer *pending_fb;
 };
 
 #define EXYNOS_DRM_PLANE_CAP_DOUBLE	(1 << 0)
@@ -187,7 +186,6 @@ struct exynos_drm_crtc {
 	struct drm_crtc			base;
 	enum exynos_drm_output_type	type;
 	unsigned int			pipe;
-	struct drm_pending_vblank_event	*event;
 	const struct exynos_drm_crtc_ops	*ops;
 	void				*ctx;
 	struct exynos_drm_clk		*pipe_clk;
