@@ -117,13 +117,42 @@ static void exynos_drm_crtc_destroy(struct drm_crtc *crtc)
 	kfree(exynos_crtc);
 }
 
+static int exynos_crtc_atomic_set_property(struct drm_crtc *crtc,
+					   struct drm_crtc_state *state,
+					   struct drm_property *property,
+					   uint64_t val)
+{
+	struct exynos_drm_crtc *exynos_crtc = to_exynos_crtc(crtc);
+
+	if (exynos_crtc->ops->atomic_set_property)
+		return exynos_crtc->ops->atomic_set_property(exynos_crtc, state, property, val);
+
+	return 0;
+}
+
+static int exynos_crtc_atomic_get_property(struct drm_crtc *crtc,
+					   const struct drm_crtc_state *state,
+					   struct drm_property *property,
+					   uint64_t *val)
+{
+	struct exynos_drm_crtc *exynos_crtc = to_exynos_crtc(crtc);
+
+	if (exynos_crtc->ops->atomic_get_property)
+		return exynos_crtc->ops->atomic_get_property(exynos_crtc, state, property, val);
+
+	return -EINVAL;
+}
+
 static const struct drm_crtc_funcs exynos_crtc_funcs = {
 	.set_config	= drm_atomic_helper_set_config,
 	.page_flip	= drm_atomic_helper_page_flip,
 	.destroy	= exynos_drm_crtc_destroy,
 	.reset = drm_atomic_helper_crtc_reset,
+	.set_property = drm_atomic_helper_crtc_set_property,
 	.atomic_duplicate_state = drm_atomic_helper_crtc_duplicate_state,
 	.atomic_destroy_state = drm_atomic_helper_crtc_destroy_state,
+	.atomic_set_property = exynos_crtc_atomic_set_property,
+	.atomic_get_property = exynos_crtc_atomic_get_property,
 };
 
 struct exynos_drm_crtc *exynos_drm_crtc_create(struct drm_device *drm_dev,
