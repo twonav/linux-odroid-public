@@ -429,7 +429,7 @@ static void mixer_cfg_rgb_fmt(struct mixer_context *ctx, unsigned int height)
  *
  * Has to be called under mixer lock.
  */
-static void mixer_cfg_layer(struct mixer_context *ctx)
+static void mixer_cfg_layer(struct mixer_context *ctx, struct exynos_drm_crtc *crtc)
 {
 	struct mixer_resources *res = &ctx->mixer_res;
 	unsigned int win;
@@ -482,6 +482,13 @@ static void mixer_cfg_layer(struct mixer_context *ctx)
 
 	mixer_reg_writemask(res, MXR_CFG, mxr_cfg, MXR_CFG_ENABLE_MASK);
 	mixer_reg_writemask(res, MXR_LAYER_CFG, mxr_layer_cfg, MXR_LAYER_CFG_MASK);
+
+	if (crtc && ctx->active_windows) {
+		struct drm_display_mode *mode = &crtc->base.state->adjusted_mode;
+
+		mixer_cfg_scan(ctx, mode->vdisplay);
+		mixer_cfg_rgb_fmt(ctx, mode->vdisplay);
+	}
 }
 
 static void mixer_run(struct mixer_context *ctx)
@@ -593,8 +600,6 @@ static void vp_video_buffer(struct mixer_context *ctx,
 	vp_reg_write(res, VP_TOP_C_PTR, chroma_addr[0]);
 	vp_reg_write(res, VP_BOT_C_PTR, chroma_addr[1]);
 
-	mixer_cfg_scan(ctx, mode->vdisplay);
-	mixer_cfg_rgb_fmt(ctx, mode->vdisplay);
 	mixer_run(ctx);
 
 	spin_unlock_irqrestore(&res->reg_slock, flags);
@@ -707,9 +712,6 @@ static void mixer_graph_buffer(struct mixer_context *ctx,
 	/* set buffer address to mixer */
 	mixer_reg_write(res, MXR_GRAPHIC_BASE(win), dma_addr);
 
-	mixer_cfg_scan(ctx, mode->vdisplay);
-	mixer_cfg_rgb_fmt(ctx, mode->vdisplay);
-
 	/* layer update mandatory for mixer 16.0.33.0 */
 	if (ctx->mxr_ver == MXR_VER_16_0_33_0 ||
 		ctx->mxr_ver == MXR_VER_128_0_0_184)
@@ -766,7 +768,7 @@ static void mixer_win_reset(struct mixer_context *ctx)
 
 	/* disable all layers and reset layer priority to default */
 	ctx->active_windows = 0;
-	mixer_cfg_layer(ctx);
+	mixer_cfg_layer(ctx, NULL);
 
 	spin_unlock_irqrestore(&res->reg_slock, flags);
 }
@@ -1034,7 +1036,7 @@ static void mixer_atomic_flush(struct exynos_drm_crtc *crtc)
 		return;
 
 	spin_lock_irqsave(&res->reg_slock, flags);
-	mixer_cfg_layer(mixer_ctx);
+	mixer_cfg_layer(mixer_ctx, crtc);
 	spin_unlock_irqrestore(&res->reg_slock, flags);
 
 	mixer_vsync_set_update(mixer_ctx, true);
@@ -1084,7 +1086,7 @@ static void mixer_disable(struct exynos_drm_crtc *crtc)
 		mixer_disable_plane(crtc, &ctx->planes[i]);
 
 	spin_lock_irqsave(&res->reg_slock, flags);
-	mixer_cfg_layer(ctx);
+	mixer_cfg_layer(ctx, NULL);
 	spin_unlock_irqrestore(&res->reg_slock, flags);
 
 	exynos_drm_pipe_clk_enable(crtc, false);
