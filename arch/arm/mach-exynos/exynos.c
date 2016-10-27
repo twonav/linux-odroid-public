@@ -25,6 +25,7 @@
 
 #include <mach/map.h>
 #include <plat/cpu.h>
+#include <plat/pm.h>
 
 #include "common.h"
 
@@ -84,6 +85,7 @@ void __init exynos_sysram_init(void)
 
 static void __init exynos_init_late(void)
 {
+
 	if (of_machine_is_compatible("samsung,exynos5440"))
 		/* to be supported later */
 		return;

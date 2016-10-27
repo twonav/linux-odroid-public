@@ -26,6 +26,7 @@
 #include <linux/interrupt.h>
 #include <linux/i2c.h>
 #include <linux/i2c/tsc2007.h>
+#include <linux/delay.h>
 #include <linux/of_device.h>
 #include <linux/of.h>
 #include <linux/of_gpio.h>
@@ -74,8 +75,10 @@ struct tsc2007 {
 
 	u16			model;
 	u16			x_plate_ohms;
+	u16			y_plate_ohms;
 	u16			max_rt;
 	unsigned long		poll_period; /* in jiffies */
+	unsigned long		poll_delay; /* in jiffies */
 	int			fuzzx;
 	int			fuzzy;
 	int			fuzzz;
@@ -112,15 +115,21 @@ static inline int tsc2007_xfer(struct tsc2007 *tsc, u8 cmd)
 	return val;
 }
 
+// 2016-09-08 DNP TWON-13931: sleep de 10 ms para que se estabilice el valor
 static void tsc2007_read_values(struct tsc2007 *tsc, struct ts_event *tc)
 {
 	/* y- still on; turn on only y+ (and ADC) */
+	tsc2007_xfer(tsc, READ_Y);
+	msleep(10);
 	tc->y = tsc2007_xfer(tsc, READ_Y);
 
 	/* turn y- off, x+ on, then leave in lowpower */
+	tsc2007_xfer(tsc, READ_X);
+	msleep(10);
 	tc->x = tsc2007_xfer(tsc, READ_X);
 
 	/* turn y+ off, x- on; we'll use formula #1 */
+	msleep(10);
 	tc->z1 = tsc2007_xfer(tsc, READ_Z1);
 	tc->z2 = tsc2007_xfer(tsc, READ_Z2);
 
@@ -136,13 +145,25 @@ static u32 tsc2007_calculate_pressure(struct tsc2007 *tsc, struct ts_event *tc)
 	if (tc->x == MAX_12BIT)
 		tc->x = 0;
 
+	/* tsc2007.pdf, pg13
 	if (likely(tc->x && tc->z1)) {
-		/* compute touch pressure resistance using equation #1 */
+		// compute touch pressure resistance using equation #1
 		rt = tc->z2 - tc->z1;
 		rt *= tc->x;
 		rt *= tsc->x_plate_ohms;
 		rt /= tc->z1;
 		rt = (rt + 2047) >> 12;
+	}
+	*/
+
+	// tsc2007.pdf, pg14
+	if (likely(tc->x && tc->z1)) {
+		// compute touch pressure resistance using equation #2
+		rt = tsc->x_plate_ohms * tc->x;
+		rt *= ( 4096 - tc->z1 );
+		rt /= tc->z1;
+		rt = rt >> 12;
+		rt -= tsc->y_plate_ohms * ((4096 - tc->y) >> 12);
 	}
 
 	return rt;
@@ -177,6 +198,9 @@ static irqreturn_t tsc2007_soft_irq(int irq, void *handle)
 	struct ts_event tc;
 	u32 rt;
 
+	if (ts->poll_delay > 0)
+		msleep(ts->poll_delay);
+
 	while (!ts->stopped && tsc2007_is_pen_down(ts)) {
 
 		/* pen is down, continue with the measurement */
@@ -184,7 +208,7 @@ static irqreturn_t tsc2007_soft_irq(int irq, void *handle)
 
 		rt = tsc2007_calculate_pressure(ts, &tc);
 
-		if (!rt && !ts->get_pendown_state) {
+		if (rt == 0 && !ts->get_pendown_state) {
 			/*
 			 * If pressure reported is 0 and we don't have
 			 * callback to check pendown state, we have to
@@ -324,6 +348,13 @@ static int tsc2007_probe_dt(struct i2c_client *client, struct tsc2007 *ts)
 		return -EINVAL;
 	}
 
+	if (!of_property_read_u32(np, "ti,y-plate-ohms", &val32)) {
+		ts->y_plate_ohms = val32;
+	} else {
+		dev_err(&client->dev, "missing ti,y-plate-ohms devicetree property.");
+		return -EINVAL;
+	}
+
 	ts->gpio = of_get_gpio(np, 0);
 	if (gpio_is_valid(ts->gpio))
 		ts->get_pendown_state = tsc2007_get_pendown_state_gpio;
@@ -348,6 +379,7 @@ static int tsc2007_probe_pdev(struct i2c_client *client, struct tsc2007 *ts,
 {
 	ts->model             = pdata->model;
 	ts->x_plate_ohms      = pdata->x_plate_ohms;
+	ts->y_plate_ohms      = pdata->y_plate_ohms;
 	ts->max_rt            = pdata->max_rt ? : MAX_12BIT;
 	ts->poll_period       = msecs_to_jiffies(pdata->poll_period ? : 1);
 	ts->get_pendown_state = pdata->get_pendown_state;

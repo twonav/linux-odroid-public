@@ -342,12 +342,13 @@ static int exynos4_clk_suspend(void)
 
 	samsung_clk_restore(reg_base, src_mask_suspend,
 					ARRAY_SIZE(src_mask_suspend));
-
+	printk("Suspend clock: OK!\n");
 	return 0;
 }
 
 static void exynos4_clk_resume(void)
 {
+	printk("Resume clock: OK!\n");
 	samsung_clk_restore(reg_base, exynos4_save_pll,
 				ARRAY_SIZE(exynos4_clk_pll_regs));
 

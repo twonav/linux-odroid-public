@@ -359,8 +359,8 @@
 			};
 
 			ldo2_reg: LDO2 {
-				regulator-name = "vddq_m1_m2_1.8V";
-				regulator-min-microvolt = <1800000>;
+				regulator-name = "vddq_m1_1.2V";
+				regulator-min-microvolt = <1200000>;
 				regulator-max-microvolt = <1800000>;
 				regulator-always-on;
 			};
@@ -406,7 +406,7 @@
 			ldo7_reg: LDO7 {
 				regulator-name = "vdd_epll_1.0V";
 				regulator-min-microvolt = <1000000>;
-				regulator-max-microvolt = <1000000>;
+				regulator-max-microvolt = <1100000>;
 				regulator-always-on;
 				LDO7-supply = <&buck6_reg>;
 			};
@@ -420,8 +420,8 @@
 
 			ldo9_reg: LDO9 {
 				regulator-name = "vt_core_1.0V";
-				regulator-min-microvolt = <1000000>;
-				regulator-max-microvolt = <1000000>;
+				regulator-min-microvolt = <1800000>;
+				regulator-max-microvolt = <1800000>;
 				regulator-always-on;
 				LDO9-supply = <&buck7_reg>;
 			};
@@ -645,7 +645,7 @@
 			buck9_reg: BUCK9 {
 				regulator-name = "io_1.2V";
 				regulator-min-microvolt = <1200000>;
-				regulator-max-microvolt = <1200000>;
+				regulator-max-microvolt = <3300000>;
 				regulator-always-on;
 				BUCK9-supply = <&reg_sysvdd>;
 			};
@@ -669,6 +669,20 @@
 		clock-names = "mclk";
 		#sound-dai-cells = <0>;
 	};
+	
+	tsc2007: tsc2007@48 {
+			compatible = "ti,tsc2007";
+			reg = <0x48>;
+			interrupt-parent = <&gpx2>;
+			interrupts = <6 0>;
+			gpios = <&gpx2 6 0>;
+			ti,max-rt = <1200>;
+			ti,fuzzx = <256>;
+			ti,fuzzy = <256>;
+			ti,fuzzz = <64>;
+			ti,x-plate-ohms = <265>;
+			ti,y-plate-ohms = <680>;
+		};
 };
 
 &i2c_2 {

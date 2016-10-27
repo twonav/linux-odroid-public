@@ -197,8 +197,8 @@ static const struct platform_suspend_ops s3c_pm_ops = {
 
 int __init s3c_pm_init(void)
 {
-	printk("S3C Power Management, Copyright 2004 Simtec Electronics\n");
+    dev_info("S3C Power Management, Copyright 2004 Simtec Electronics\n");
 
-	suspend_set_ops(&s3c_pm_ops);
-	return 0;
+    suspend_set_ops(&s3c_pm_ops);
+    return 0;
 }

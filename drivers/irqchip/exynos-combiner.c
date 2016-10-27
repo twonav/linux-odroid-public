@@ -220,6 +220,8 @@ static int combiner_suspend(void)
 		combiner_data[i].pm_save =
 			readl_relaxed(combiner_data[i].base + COMBINER_ENABLE_SET);
 
+	printk("Suspend combiner: OK!\n");
+
 	return 0;
 }
 
@@ -240,6 +242,7 @@ static void combiner_resume(void)
 		writel_relaxed(combiner_data[i].pm_save,
 			     combiner_data[i].base + COMBINER_ENABLE_SET);
 	}
+	printk("Resume combiner: OK!\n");
 }
 
 #else

@@ -36,6 +36,9 @@
 
 #include <mach/map.h>
 
+#include <linux/gpio.h>
+#include <linux/interrupt.h>
+
 #include <plat/pm-common.h>
 
 #include "common.h"
@@ -700,6 +703,12 @@ static const struct of_device_id exynos_pmu_of_device_ids[] __initconst = {
 
 static struct syscore_ops exynos_pm_syscore_ops;
 
+static irq_handler_t button_irq(int irq, void *pw)
+{
+    printk("suspend irq wake\n");
+    return IRQ_HANDLED;
+}
+
 void __init exynos_pm_init(void)
 {
 	const struct of_device_id *match;
@@ -711,6 +720,15 @@ void __init exynos_pm_init(void)
 		pr_err("Failed to find PMU node\n");
 		return;
 	}
+
+    /*wake up test */
+    int test_irq = gpio_to_irq(213);
+    printk("test_irq:%d\n",test_irq);
+
+    int result_req = request_irq(test_irq, (irq_handler_t)button_irq, IRQF_TRIGGER_RISING,"suspend-irq", NULL);
+    printk ("result_req_irq: %d\n",result_req);
+
+    enable_irq_wake(test_irq);
 
 	if (WARN_ON(!of_find_property(np, "interrupt-controller", NULL))) {
 		pr_warn("Outdated DT detected, suspend/resume will NOT work\n");
