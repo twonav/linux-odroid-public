@@ -25,7 +25,6 @@
 #include <linux/dma-contiguous.h>
 #include <linux/cma.h>
 #include <linux/delay.h>
-#include <linux/dma-mapping.h>
 
 static struct clk *sclk_g3d_clock = NULL;
 static struct clk *g3d_clock = NULL;
@@ -222,10 +221,6 @@ int mali_platform_device_init(struct platform_device *device)
 	mali_gpu_data.get_clock_info = NULL;
 	mali_gpu_data.get_freq = NULL;
 #endif
-
-	ret = dma_set_mask_and_coherent(&device->dev, DMA_BIT_MASK(32));
-	if (ret < 0)
-		goto fail_platform_data;
 
 	ret = platform_device_add_data(device, &mali_gpu_data, sizeof(mali_gpu_data));
 	if (ret < 0)

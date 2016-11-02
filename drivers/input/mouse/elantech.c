@@ -1159,13 +1159,6 @@ static const struct dmi_system_id elantech_dmi_has_middle_button[] = {
 			DMI_MATCH(DMI_PRODUCT_NAME, "CELSIUS H730"),
 		},
 	},
-	{
-		/* Fujitsu H760 also has a middle button */
-		.matches = {
-			DMI_MATCH(DMI_SYS_VENDOR, "FUJITSU"),
-			DMI_MATCH(DMI_PRODUCT_NAME, "CELSIUS H760"),
-		},
-	},
 #endif
 	{ }
 };
@@ -1510,20 +1503,6 @@ static const struct dmi_system_id elantech_dmi_force_crc_enabled[] = {
 		},
 	},
 	{
-		/* Fujitsu H760 does not work with crc_enabled == 0 */
-		.matches = {
-			DMI_MATCH(DMI_SYS_VENDOR, "FUJITSU"),
-			DMI_MATCH(DMI_PRODUCT_NAME, "CELSIUS H760"),
-		},
-	},
-	{
-		/* Fujitsu LIFEBOOK E544  does not work with crc_enabled == 0 */
-		.matches = {
-			DMI_MATCH(DMI_SYS_VENDOR, "FUJITSU"),
-			DMI_MATCH(DMI_PRODUCT_NAME, "LIFEBOOK E544"),
-		},
-	},
-	{
 		/* Fujitsu LIFEBOOK E554  does not work with crc_enabled == 0 */
 		.matches = {
 			DMI_MATCH(DMI_SYS_VENDOR, "FUJITSU"),
@@ -1531,10 +1510,10 @@ static const struct dmi_system_id elantech_dmi_force_crc_enabled[] = {
 		},
 	},
 	{
-		/* Fujitsu LIFEBOOK E556 does not work with crc_enabled == 0 */
+		/* Fujitsu LIFEBOOK E544  does not work with crc_enabled == 0 */
 		.matches = {
 			DMI_MATCH(DMI_SYS_VENDOR, "FUJITSU"),
-			DMI_MATCH(DMI_PRODUCT_NAME, "LIFEBOOK E556"),
+			DMI_MATCH(DMI_PRODUCT_NAME, "LIFEBOOK E544"),
 		},
 	},
 	{

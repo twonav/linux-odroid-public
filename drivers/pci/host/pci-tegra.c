@@ -856,7 +856,7 @@ static int tegra_pcie_phy_disable(struct tegra_pcie *pcie)
 	/* override IDDQ */
 	value = pads_readl(pcie, PADS_CTL);
 	value |= PADS_CTL_IDDQ_1L;
-	pads_writel(pcie, value, PADS_CTL);
+	pads_writel(pcie, PADS_CTL, value);
 
 	/* reset PLL */
 	value = pads_readl(pcie, soc->pads_pll_ctl);

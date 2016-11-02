@@ -280,43 +280,35 @@ static void __init register_insn_emulation_sysctl(struct ctl_table *table)
 /*
  * Error-checking SWP macros implemented using ldxr{b}/stxr{b}
  */
-
-/* Arbitrary constant to ensure forward-progress of the LL/SC loop */
-#define __SWP_LL_SC_LOOPS	4
-
-#define __user_swpX_asm(data, addr, res, temp, temp2, B)	\
+#define __user_swpX_asm(data, addr, res, temp, B)		\
 	__asm__ __volatile__(					\
-	"	mov		%w3, %w7\n"			\
 	ALTERNATIVE("nop", SET_PSTATE_PAN(0), ARM64_HAS_PAN,	\
 		    CONFIG_ARM64_PAN)				\
-	"0:	ldxr"B"		%w2, [%4]\n"			\
-	"1:	stxr"B"		%w0, %w1, [%4]\n"		\
+	"0:	ldxr"B"		%w2, [%3]\n"			\
+	"1:	stxr"B"		%w0, %w1, [%3]\n"		\
 	"	cbz		%w0, 2f\n"			\
-	"	sub		%w3, %w3, #1\n"			\
-	"	cbnz		%w3, 0b\n"			\
-	"	mov		%w0, %w5\n"			\
+	"	mov		%w0, %w4\n"			\
 	"	b		3f\n"				\
 	"2:\n"							\
 	"	mov		%w1, %w2\n"			\
 	"3:\n"							\
 	"	.pushsection	 .fixup,\"ax\"\n"		\
 	"	.align		2\n"				\
-	"4:	mov		%w0, %w6\n"			\
+	"4:	mov		%w0, %w5\n"			\
 	"	b		3b\n"				\
 	"	.popsection"					\
 	_ASM_EXTABLE(0b, 4b)					\
 	_ASM_EXTABLE(1b, 4b)					\
 	ALTERNATIVE("nop", SET_PSTATE_PAN(1), ARM64_HAS_PAN,	\
 		CONFIG_ARM64_PAN)				\
-	: "=&r" (res), "+r" (data), "=&r" (temp), "=&r" (temp2)	\
-	: "r" (addr), "i" (-EAGAIN), "i" (-EFAULT),		\
-	  "i" (__SWP_LL_SC_LOOPS)				\
+	: "=&r" (res), "+r" (data), "=&r" (temp)		\
+	: "r" (addr), "i" (-EAGAIN), "i" (-EFAULT)		\
 	: "memory")
 
-#define __user_swp_asm(data, addr, res, temp, temp2) \
-	__user_swpX_asm(data, addr, res, temp, temp2, "")
-#define __user_swpb_asm(data, addr, res, temp, temp2) \
-	__user_swpX_asm(data, addr, res, temp, temp2, "b")
+#define __user_swp_asm(data, addr, res, temp) \
+	__user_swpX_asm(data, addr, res, temp, "")
+#define __user_swpb_asm(data, addr, res, temp) \
+	__user_swpX_asm(data, addr, res, temp, "b")
 
 /*
  * Bit 22 of the instruction encoding distinguishes between
@@ -336,12 +328,12 @@ static int emulate_swpX(unsigned int address, unsigned int *data,
 	}
 
 	while (1) {
-		unsigned long temp, temp2;
+		unsigned long temp;
 
 		if (type == TYPE_SWPB)
-			__user_swpb_asm(*data, address, res, temp, temp2);
+			__user_swpb_asm(*data, address, res, temp);
 		else
-			__user_swp_asm(*data, address, res, temp, temp2);
+			__user_swp_asm(*data, address, res, temp);
 
 		if (likely(res != -EAGAIN) || signal_pending(current))
 			break;

@@ -89,9 +89,8 @@ SECTIONS
 	/* Start of data section */
 	_sdata = .;
 
-	/* Architecturally we need to keep __gp below 0x1000000 and thus
-	 * in front of RO_DATA_SECTION() which stores lots of tracepoint
-	 * and ftrace symbols. */
+	RO_DATA_SECTION(8)
+
 #ifdef CONFIG_64BIT
 	. = ALIGN(16);
 	/* Linkage tables */
@@ -105,8 +104,6 @@ SECTIONS
 		*(.dlt)
 	}
 #endif
-
-	RO_DATA_SECTION(8)
 
 	/* unwind info */
 	.PARISC.unwind : {

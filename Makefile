@@ -1,6 +1,6 @@
 VERSION = 4
 PATCHLEVEL = 8
-SUBLEVEL = 5
+SUBLEVEL = 4
 EXTRAVERSION =
 NAME = Psychotic Stoned Sheep
 
