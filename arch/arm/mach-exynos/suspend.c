@@ -415,6 +415,8 @@ static void exynos5420_pm_prepare(void)
 
 static int exynos_pm_suspend(void)
 {
+	gpio_direction_output(237, 0);
+
 	exynos_pm_central_suspend();
 
 	/* Setting SEQ_OPTION register */
@@ -429,6 +431,7 @@ static int exynos_pm_suspend(void)
 
 static int exynos5420_pm_suspend(void)
 {
+
 	u32 this_cluster;
 
 	exynos_pm_central_suspend();
@@ -456,6 +459,8 @@ static void exynos_pm_release_retention(void)
 
 static void exynos_pm_resume(void)
 {
+	gpio_direction_output(237, 1);
+
 	u32 cpuid = read_cpuid_part();
 
 	if (exynos_pm_central_resume())
