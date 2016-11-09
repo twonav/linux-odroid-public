@@ -21,6 +21,8 @@
 #include <linux/of_address.h>
 #include <linux/of_irq.h>
 
+#include <linux/gpio.h>
+
 #define COMBINER_ENABLE_SET	0x0
 #define COMBINER_ENABLE_CLEAR	0x4
 #define COMBINER_INT_STATUS	0xC
@@ -221,6 +223,8 @@ static int combiner_suspend(void)
 			readl_relaxed(combiner_data[i].base + COMBINER_ENABLE_SET);
 
 	printk("Suspend combiner: OK!\n");
+
+	gpio_direction_output(237, 0);
 
 	return 0;
 }

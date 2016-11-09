@@ -415,7 +415,7 @@ static void exynos5420_pm_prepare(void)
 
 static int exynos_pm_suspend(void)
 {
-	gpio_direction_output(237, 0);
+	gpio_direction_output(237, 1);
 
 	exynos_pm_central_suspend();
 

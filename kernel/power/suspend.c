@@ -30,6 +30,8 @@
 #include <linux/compiler.h>
 #include <linux/moduleparam.h>
 
+#include <linux/gpio.h>
+
 #include "power.h"
 
 const char *pm_labels[] = { "mem", "standby", "freeze", NULL };
@@ -469,6 +471,7 @@ static void suspend_finish(void)
  */
 static int enter_state(suspend_state_t state)
 {
+	gpio_direction_output(237, 0);
 	int error;
 
 	trace_suspend_resume(TPS("suspend_enter"), state, true);
